@@ -1,0 +1,5 @@
+main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"banderolownica3_0.c" LINE:1120
+jedz_do_krancowki_poziom DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"banderolownica3_0.c" LINE:710
+jedz_dystans DSTACK_USAGE:14 DSTACK_LEVEL:14 FILE:"banderolownica3_0.c" LINE:675
+obroc_o_1_8_stopnia DSTACK_USAGE:2 DSTACK_LEVEL:16 FILE:"banderolownica3_0.c" LINE:664
+timer2_ovf_isr DSTACK_USAGE:12 DSTACK_LEVEL:28 FILE:"banderolownica3_0.c" LINE:630

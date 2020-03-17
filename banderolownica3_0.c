@@ -1,0 +1,1523 @@
+/*****************************************************
+This program was produced by the
+CodeWizardAVR V2.05.0 Professional
+Automatic Program Generator
+© Copyright 1998-2010 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+Project : 
+Version : 
+Date    : 2017-01-04
+Author  : 
+Company : 
+Comments: 
+
+
+Chip type               : ATmega128
+Program type            : Application
+AVR Core Clock frequency: 8,000000 MHz
+Memory model            : Small
+External RAM size       : 0
+Data Stack size         : 1024
+*****************************************************/
+
+#include <mega128.h>
+#include <delay.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <alcd.h>
+
+long int ulamki_sekund_0;
+long int ulamki_sekund_1;
+long int ulamki_sekund_2;
+long int milisekundy_przechodzi_kubek;
+long int milisekundy_czas_kroku;
+long int milisekundy_pobieram_banderole;
+long int milisekundy_przejazd_nad_klejem;
+long int milisekundy_naklejam;
+long int milisekundy_oklejanie_boczne;
+//long int milisekundy_silownik_obrotowy;
+long int czas_wylaczenia_falownika;
+long int czas_czyszczenia_tasmy;
+long int licznik_wlacznika_run;
+long int licznik_wyswietlania_kleju;
+long int licznik_wyswietlania_kleju_stala;
+long int licznik_wyswietlen_jak_stoi;
+int pracuje_w_kierunku;
+
+
+float silnik_gorny_zebatka_promien;
+int mikro_krokow_na_obrot;
+long int czas;
+int zezwalaj_na_kolejny_kubek;
+int dostep_do_podajnika;
+int zezzwalaj_na_oklejenie_boczne;
+int oklejam_bok;
+int wyzerowalem_nad_podajnikiem;
+int jest_klej;
+int pracuje;
+int wyswietl_obecnosc_kleju, wyswietl_brak_kleju;
+int zezwolenie_run;
+int dawka_kleju;
+int srednie_kubki;
+int pobralem_banderole;
+int opuscilem_banderole;
+int podnioslem_banderole;
+int lej_klej;
+int cofniety_pistolet;
+int nakleilem;
+int wyzerowalem_krancowke;
+int wykonano_1;
+int wykonano_2;
+int sprawdzilem_banderole;
+int podajnik_gotowy;
+int widzi_kubek;
+int zatrzymalem_kubek;
+int licznik_pionowego_czujnika;
+int licznik_nie_pobrania_banderol;
+int licznik_cykli;
+int sytuacja_startowa;
+int fast;
+int guzik_male_kubki;
+int kubek;
+char *dupa;
+int poczatek_serii;
+int kolejkowanie_start_stop_poczatek;
+int dobieram_dawke;
+int leje_klej;
+int dawka_kleju_wyswietlona;
+int wyk1;
+
+void zeruj_licznik(char *proces)
+{
+
+if(strcmp(proces, "przechodzi_kubek")==0)
+  milisekundy_przechodzi_kubek = ulamki_sekund_1;
+
+if(strcmp(proces, "czas_kroku")==0)
+  milisekundy_czas_kroku = ulamki_sekund_1;
+
+if(strcmp(proces, "pobieram_banderole")==0)
+  milisekundy_pobieram_banderole = ulamki_sekund_1; 
+                                                   
+if(strcmp(proces, "przejazd_nad_klejem")==0)
+  milisekundy_przejazd_nad_klejem = ulamki_sekund_1;
+
+if(strcmp(proces, "naklejam")==0)
+  milisekundy_naklejam = ulamki_sekund_1;
+
+if(strcmp(proces, "oklejanie_boczne")==0)
+  milisekundy_oklejanie_boczne = ulamki_sekund_1; 
+   
+    
+}
+
+long int odczyt_licznik(char *proces)
+{                                        
+long int stan_licznika;
+
+if(strcmp(proces, "przechodzi_kubek")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_przechodzi_kubek;
+
+if(strcmp(proces, "czas_kroku")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_czas_kroku;
+
+if(strcmp(proces, "pobieram_banderole")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_pobieram_banderole;
+
+if(strcmp(proces, "przejazd_nad_klejem")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_przejazd_nad_klejem;
+
+if(strcmp(proces, "naklejam")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_naklejam;
+        
+if(strcmp(proces, "oklejanie_boczne")==0)
+    stan_licznika = ulamki_sekund_1 - milisekundy_oklejanie_boczne;
+
+
+
+                                                                                     
+return stan_licznika;
+}
+
+
+void bez_przerwania()
+{
+if(zezzwalaj_na_oklejenie_boczne == 1)
+    {
+    licznik_pionowego_czujnika++;                  
+    if(PORTA.7 == 0 & licznik_pionowego_czujnika > 6 & srednie_kubki == 0)
+        {
+        PORTA.6 = 0;
+        oklejam_bok = 1;
+        licznik_pionowego_czujnika = 0;
+        zezzwalaj_na_oklejenie_boczne = 0;
+        zeruj_licznik("oklejanie_boczne");
+        }
+    if(PORTA.7 == 0 & licznik_pionowego_czujnika > 12 & srednie_kubki == 1)
+        {
+        PORTA.6 = 0;
+        oklejam_bok = 1;
+        licznik_pionowego_czujnika = 0;
+        zezzwalaj_na_oklejenie_boczne = 0;
+        zeruj_licznik("oklejanie_boczne");
+        }
+    }
+}
+
+
+void wybor_trybu_pracy()
+{
+if(PINB.5 == 1 & PINB.4 == 1)
+  {
+  srednie_kubki = 0;
+  fast = 0;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-HASSO");  
+  lcd_gotoxy(0,1);
+  lcd_puts("SLOW");
+  }
+
+if(PINB.5 == 0 & PINB.4 == 1)
+  {
+  srednie_kubki = 1;
+  fast = 0;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-250");
+  lcd_gotoxy(0,1);
+  lcd_puts("SLOW");
+  }
+
+if(PINB.5 == 1 & PINB.4 == 0)
+  {
+  srednie_kubki = 0;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-HASSO");  
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  }
+
+
+if(PINB.5 == 0 & PINB.4 == 0)
+  {
+  srednie_kubki = 1;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-250");
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  }
+//Chaos - jak chaos guzik wlaczony to tamte guzki nie chodza
+if(PINB.3 == 0 & PINB.4 == 0)
+  {
+  srednie_kubki = 2;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-CHAOS");
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  }
+
+
+if(PINB.3 == 0 & PINB.4 == 1)
+  {
+  srednie_kubki = 2;
+  fast = 0;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-CHAOS");
+  lcd_gotoxy(0,1);
+  lcd_puts("SLOW");
+  }
+
+}
+
+void wybor_trybu_pracy_bez_fast()
+{
+int wybor_kubka;
+wybor_kubka = 0;
+
+if(PINB.3 == 1 & PINB.4 == 1 & PINB.5 == 1)
+  {
+  srednie_kubki = 0;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-HASSO");  
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  wybor_kubka = 1;
+  }
+
+
+if(PINB.3 == 1 & PINB.4 == 0 & PINB.5 == 0)
+  {
+  srednie_kubki = 1;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-ULTIMATE");
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  wybor_kubka = 1;
+  }
+
+if(PINB.3 == 0 & PINB.4 == 1 & PINB.5 == 0)
+  {
+  srednie_kubki = 2;
+  fast = 1;
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("ONLINE-CHAOS");
+  lcd_gotoxy(0,1);
+  lcd_puts("FAST");
+  wybor_kubka = 1;
+  }
+
+if(wybor_kubka == 0)
+  {
+  lcd_clear();
+  lcd_gotoxy(0,0);
+  lcd_puts("BRAK WYBORU");
+  lcd_gotoxy(0,1);
+  lcd_puts("KUBKA");
+  while(1)
+    {
+    }
+  }
+
+}
+
+
+
+
+
+void obsluga_dawki_kleju()
+{
+if(PINC.6 == 0 & dobieram_dawke == 0)
+    {
+    dobieram_dawke = 1;
+    dawka_kleju++;
+    if(dawka_kleju > 7)
+        dawka_kleju = 0;
+    }
+if(PINC.6 == 1 & dobieram_dawke == 1)
+    dobieram_dawke = 0; 
+}
+
+void obsluga_kleju()
+{
+if(PINC.4 == 0)
+        {
+        if(wyswietl_obecnosc_kleju == 1)
+           {
+           lcd_clear();
+           lcd_gotoxy(0,0);
+           lcd_puts("GLUE LOADED");
+           } 
+        wyswietl_obecnosc_kleju = 0;
+        wyswietl_brak_kleju = 1;
+        jest_klej = 1;
+        if(licznik_wyswietlania_kleju < licznik_wyswietlania_kleju_stala)
+            licznik_wyswietlania_kleju++;
+        
+        }
+else
+        {
+        if(wyswietl_brak_kleju == 1)
+            {
+            lcd_clear();
+            lcd_gotoxy(0,0);
+            lcd_puts("LOAD GLUE");
+            }
+        wyswietl_obecnosc_kleju = 1;
+        licznik_wyswietlania_kleju = 0;
+        wyswietl_brak_kleju = 0;
+        jest_klej = 0;
+        }
+}
+
+
+void sekwencja_wylaczenia_falownika_nowa()
+{
+}
+
+
+void sekwencja_wylaczenia_falownika()
+{
+czas_wylaczenia_falownika = 0;
+           //run       
+       if((PINB.0 == 0 & dostep_do_podajnika == 0) | pracuje == 1)
+            {
+            if(pracuje == 0 & poczatek_serii == 1)
+                {
+                PORTD.2 = 0; //ZMIANA STANU
+                poczatek_serii = 0;
+                }
+            }
+        else
+            {
+            if(PORTD.2 == 0)  //ZMIANA STANU
+               {                                  //100000  //dziele przez 2
+                while(czas_wylaczenia_falownika < 50000)
+                    czas_wylaczenia_falownika++;  //200000
+                while(czas_wylaczenia_falownika < 100000)
+                    {
+                    czas_wylaczenia_falownika++;
+                    PORTA.7 = 0;  //koniec zatrzymania
+                    widzi_kubek = 0;
+                    }
+                                                 //240000
+                while(czas_wylaczenia_falownika < 120000)
+                    {
+                    czas_wylaczenia_falownika++;
+                    widzi_kubek = 0;
+                    }
+                                                 //350000
+                while(czas_wylaczenia_falownika < 175000)
+                    {
+                    czas_wylaczenia_falownika++;
+                    widzi_kubek = 0;
+                    }
+                
+                PORTD.2 = 1; //wylacz falownik //ZMIANA STANU
+                czas = 0;
+                licznik_wlacznika_run = 0;
+                poczatek_serii = 1;    
+                kolejkowanie_start_stop_poczatek = 1;
+               }
+            
+            
+            } 
+}
+
+
+
+
+
+
+void kolejkowanie_start_stop()
+{
+if(kolejkowanie_start_stop_poczatek == 1 & PINB.0 == 0)
+    {
+    if(PINB.6 == 0 & kubek == 0)
+        {
+        czas = 0;
+        kubek = 1;
+        }
+    if(kubek == 1 & czas > 10000)
+        {
+        czas = 0;
+        kubek = 0;
+        kolejkowanie_start_stop_poczatek = 0;
+        }
+        
+    }
+
+if(PINB.6 == 0 & kubek == 0 & PINB.0 == 0 & kolejkowanie_start_stop_poczatek == 0)
+       {
+       czas = 0;
+       kubek = 1;
+       zatrzymalem_kubek = 1;
+       }
+                        //500
+if(kubek == 1 & czas > 400 & kolejkowanie_start_stop_poczatek == 0)    
+    {
+    //zatrzymalem_kubek = 1;
+    PORTD.2 = 1;  //wy³¹czenie falownika
+    kubek = 2;
+    czas = 0;
+    }
+                       //500
+           
+if(kubek == 2 & czas > 1500)  //7800
+     {
+     PORTA.7 = 1;  //zablokuj kubka 
+     kubek = 3;
+     czas = 0;
+     }
+
+if(kubek == 4)
+     {
+     PORTA.0 = 0;  //otworz przegrode
+     czas = 0;
+     kubek = 5;
+     }
+    
+if(kubek == 5 & czas > 4500 & srednie_kubki == 1)
+     {
+     PORTA.0 = 1;  //zamknij przegrode                //male kubki
+     czas = 0;
+     kubek = 0;
+     }
+                        //4800
+if(kubek == 5 & czas > 5000 & srednie_kubki == 0)
+     {                                               //hasso
+     PORTA.0 = 1;  //zamknij przegrode
+     czas = 0;
+     kubek = 0;
+     }
+
+if(kubek == 5 & czas > 5700 & srednie_kubki == 2)  //5800
+     {
+     PORTA.0 = 1;  //zamknij przegrode                //haos
+     czas = 0;
+     kubek = 6;
+     }
+
+if(kubek == 6 & czas > 900 & srednie_kubki == 2)  //700
+     {
+     czas = 0;
+     kubek = 0;
+     }
+
+
+
+//if(kubek == 4 & PINB.6 == 1)  //nie ma kubka
+//     {
+//     PORTA.0 = 0;  //otworz przegrode
+//     czas = 0;
+//     kubek = 0;
+//     }
+    
+
+
+     
+
+
+
+
+
+/*
+
+if(PINB.6 == 0 & kubek == 0 & PINB.0 == 0)
+       {
+       czas = 0;
+       kubek = 1;
+       }
+       
+if(kubek == 1 & czas > 2000)  //7800
+     {
+     PORTA.0 = 0;  //otworz przegrode      
+     kubek = 2;
+     czas = 0;
+     }
+                       //10300
+if(kubek == 2 & czas > 2000) 
+      {
+      PORTA.0 = 1;  //zamknij przegrode
+      kubek = 3;
+      czas = 0;
+      }
+     
+//if(PINC.1 == 1 & kubek == 3)
+//        {
+//        kubek = 4;
+//        czas = 0;
+//        }
+
+if(czas > 1 & kubek == 3)
+   {
+   PORTA.1 = 1;  //szpikulec wystaw           
+   //PORTD.2 = 1;  //wy³¹czenie falownika
+   kubek = 4;
+   zatrzymalem_kubek = 1;
+   czas = 0;
+   }
+
+if(czas > 1500 & kubek == 4)
+    {
+    PORTD.2 = 1;  //wy³¹czenie falownika
+    kubek = 5;
+    }
+
+
+if(czas > 2200 & kubek == 5 & srednie_kubki == 0)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 6;
+   //PORTD.2 = 1;  //wy³¹czenie falownika
+   }
+
+if(czas > 3200 & kubek == 5 & srednie_kubki == 1)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 6;
+   //PORTD.2 = 1;  //wy³¹czenie falownika
+   }
+
+if(czas > 4200 & kubek == 5 & srednie_kubki == 2)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 6;
+   //PORTD.2 = 1;  //wy³¹czenie falownika
+   }   
+
+//if(PINC.1 == 0 & kubek == 6)   //przejechal kubek wiec moge od nowa dzialac
+//   {
+//   kubek = 7; 
+//   czas = 0;
+//   }
+//   
+//if(kubek == 5 & czas > 5000)
+//   kubek = 0;    
+   
+          -
+   
+
+*/
+}
+
+
+void kolejkowanie_nowe()                                       
+{                                                              
+
+
+zezwolenie_run = 1;
+
+         //zmieniam polaryzacje pod podpieciu do karty
+if(PINB.6 == 0 & kubek == 0 & PINB.0 == 0 & zezwolenie_run == 1)
+        {
+        kubek = 1;
+        czas = 0;
+        }
+         //7500 16.01.2016
+if(czas > 7800 & kubek == 1 & zezwolenie_run == 1)
+    {
+    PORTA.0 = 0;  //otworz przegrode
+    kubek = 2;
+    }
+          //10000 - 09.01.2016
+if(czas > 10300 & czas < 12500 & kubek == 2 & zezwolenie_run == 1)
+   {
+   //PORTA.0 = 1;  //zamknij przegrode
+   PORTA.1 = 1;  //szpikulec wystaw           
+   kubek = 3;
+   zatrzymalem_kubek = 1;
+   }
+
+if(czas > 12500 & kubek == 3 & srednie_kubki == 0 & zezwolenie_run == 1)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 4;
+   }
+
+if(czas > 13500 & kubek == 3 & srednie_kubki == 1 & zezwolenie_run == 1)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 4;
+   }
+
+if(czas > 14500 & kubek == 3 & srednie_kubki == 2 & zezwolenie_run == 1)
+   {       
+   PORTA.7 = 1;  //zablokuj kubka
+   kubek = 4;
+   }
+
+
+
+}
+
+// Timer2 overflow interrupt service routine
+
+interrupt [TIM2_OVF] void timer2_ovf_isr(void)
+{
+ulamki_sekund_1++;                                            
+kolejkowanie_start_stop();
+/*
+if(jest_klej == 1 & dawka_kleju != dawka_kleju_wyswietlona)
+    {
+    lcd_gotoxy(13,1);
+    itoa(dawka_kleju,dupa);
+    lcd_puts(dupa);
+    }
+*/
+}
+
+
+interrupt [TIM0_OVF] void timer0_ovf_isr(void)
+{
+// Place your code here
+ulamki_sekund_2++; 
+czas++;
+ulamki_sekund_0++;
+}
+
+void obroc_o_1_8_stopnia_pionowy()
+{
+PORTE.2 = 0;
+if(ulamki_sekund_2 >= 1)  // bylo 1 12.01
+    {
+    PORTE.2 = 1;
+    ulamki_sekund_2 = 0;
+    }
+
+}
+                                     
+void obroc_o_1_8_stopnia(int speed)
+{
+PORTE.4 = 0;
+if(ulamki_sekund_0 == speed)  //bylo 1;
+    {
+    PORTE.4 = 1;
+    ulamki_sekund_0 = 0;
+    }
+}
+
+
+void jedz_dystans(float d, int speed)
+{
+int i;
+float kroki_obliczeniowe;
+int kroki;
+kroki_obliczeniowe = (d/(2*3.14*silnik_gorny_zebatka_promien))*mikro_krokow_na_obrot;
+kroki = (int) kroki_obliczeniowe;
+
+//2 * 3.14 * silnik_gorny_zebatka_promien
+//to caly obrot, zeby tyle to obroc z pelna predkoscia 1 raz
+//400 razy wykonaj funkcje obroc o kont 1.8 stopnia to bedzie pelny obrot przy pelnokrokowej pracy
+
+for(i=0;i<kroki;i++)
+   {
+   ulamki_sekund_0 = speed;  //bylo 1
+   obroc_o_1_8_stopnia(speed);
+   while(ulamki_sekund_0<speed)  //zamiast 5 bylo 1
+       i=i; 
+   }
+}
+
+void jedz_kroki(int d, int speed)
+{
+int i;
+
+for(i=0;i<d;i++)
+   {
+   ulamki_sekund_0 = speed;  //bylo 1
+   obroc_o_1_8_stopnia(speed);
+   while(ulamki_sekund_0<speed)  //zamiast 5 bylo 1
+       i=i; 
+   }
+}
+
+
+void jedz_do_krancowki_poziom()
+{
+            
+if(PINC.2 == 0)
+   {
+   PORTE.5 = 0;  //DIR //8
+   obroc_o_1_8_stopnia(8);   
+   }
+             
+if(PINC.2 == 1)
+    {
+    wyzerowalem_krancowke = 1;
+    }
+   
+
+if(wyzerowalem_krancowke == 1)
+        {
+        PORTE.5 = 1;  //DIR
+        jedz_dystans(46,8);  //jedz nad podajnik  44        
+        wyzerowalem_nad_podajnikiem = 1;  
+        }            
+
+}
+
+void obsluga_podajnika_banderol()
+{
+    //run              //w dol         //w gore on ciagle zwiera do masy                      
+        if(PINB.0 == 1 & PINC.3 == 0 & PINB.1 == 1)
+            {
+            PORTE.3 = 1;  //DIR
+            obroc_o_1_8_stopnia_pionowy();
+            if(PINB.7 == 0)   
+                 podajnik_gotowy = 0;
+            }                       
+                                                            
+                                                        
+        //wlacnzik start                                  //w gore   
+        if(PINB.0 == 1 & PINC.3 == 1 & PINB.1 == 0  &  PINB.7 == 0)
+            {
+            PORTE.3 = 0; //DIR pion     //jedziemy w gore recznie jezeli potrzeba
+            obroc_o_1_8_stopnia_pionowy();
+               if(PINB.7 == 1)   
+                      podajnik_gotowy = 1;
+            }
+              
+            
+         if(PINB.7 == 1 & podajnik_gotowy == 0)
+              podajnik_gotowy = 1;
+               
+                                    //w gore guzik
+        //wlacnzik start  //guzik jechania w dol   //czujnik banderol //kranocowka banderol //PINB.4 == 0
+        if(PINB.0 == 0 & PINC.3 == 1 & PINB.1 == 1 & PINB.7 == 0 & podajnik_gotowy == 0)
+            {
+            //if(ulamki_sekund_2 > 1)
+            //    ulamki_sekund_2 = 0;
+            PORTE.3 = 0; //DIR pion     //jedziemy w gore na samym poczatku po zainicjowaniu maszyny
+            obroc_o_1_8_stopnia_pionowy();            
+            if(PINB.7 == 1)   
+                podajnik_gotowy = 1;
+            }
+           //run          //st-down    //st-up                                           
+        if(PINB.0 == 1 & PINC.3 == 1 & PINB.1 == 1 & PINB.2 == 0 & wyzerowalem_krancowke == 1 & dostep_do_podajnika == 0)
+            {
+            PORTE.5 = 0;  //DIR
+            jedz_dystans(40,5);  //70 
+            dostep_do_podajnika = 1;
+            }
+        if(PINB.0 == 1 & PINC.3 == 1 & PINB.1 == 1 & PINB.2 == 1 & wyzerowalem_krancowke == 1 & dostep_do_podajnika == 1)
+            {
+            PORTE.5 = 1;  //DIR
+            jedz_dystans(40,5);      //70
+            dostep_do_podajnika = 0;
+            }
+      
+}
+
+
+
+int pobierz_banderole()
+{
+zeruj_licznik("pobieram_banderole");
+PORTA.4 = 1;     //ssawka
+PORTA.5 = 1;    //silownik banderoli
+return 1;
+}
+
+int naklejam()
+{
+PORTA.5 = 1;    //silownik banderoli
+PORTA.4 = 0;     //ssanie - na razie ssania nie wylaczam
+PORTD.1 = 1;  //ZMIANA STANU wylaczam slabe ssanie tez
+
+zeruj_licznik("naklejam");
+return 1;
+}
+
+void sprawdz_cisnienie()
+{
+while(PINC.5 == 1)
+    {
+    lcd_clear();
+    lcd_gotoxy(0,0);
+    lcd_puts("Brak wymaganego ciœnienia 7 bar");
+    while(PINC.5 == 1)
+    {}
+    lcd_clear();
+    }
+}
+
+void kontrola_obecnosci_banderol()
+{
+
+if(PINC.1 == 1)
+    {
+    PORTD.3 = 1;    //ZMIANA STANU nie lej kleju
+    PORTA.2 = 0;   //odsun awaryjnie pistolet  
+    PORTA.4 = 0;   //wylacz aby nie ssalo
+    lcd_clear();
+    lcd_gotoxy(0,0);
+    lcd_puts("Turn off and check streamers");
+    while(1)
+        {
+        }    
+    }
+//if(PINC.1 == 0)
+//    {
+//    lcd_clear();
+//    lcd_gotoxy(0,0);
+//    lcd_puts("OK");
+//    }
+}
+
+
+void praca_prawo()
+{
+if(pobralem_banderole == 0)
+        {
+        pracuje_w_kierunku = 1;
+        PORTE.5 = 1;  //DIR
+        pobralem_banderole = pobierz_banderole();  //tu powinien na chwile stanac aby zd¹zyæ to zrobiæ
+        }
+                                       //2000                                       
+if(odczyt_licznik("pobieram_banderole")>2000 & odczyt_licznik("pobieram_banderole")<6000 & wykonano_1 == 0)
+        {
+        //PORTA.4 = 1;     //ssawka
+        wykonano_1 = 1;
+        wyk1 = 1;
+        if(fast == 1)
+              {
+              PORTA.2 = 1;  //przysun pistolet      
+              }
+        }
+                                      //4000       //& wykonano_1 == 1
+if(odczyt_licznik("pobieram_banderole")>0 & pobralem_banderole == 1 & fast == 1 & leje_klej == 0) 
+    {
+    PORTD.3 = 0;  //ZMIANA STANU lej klej
+    leje_klej = 1;
+    } 
+    
+//odejmuje wszedzie 2000 ponizej
+//odejmuje wszedzie 1000 ponizej
+
+//troche dluzej btc na dole
+                                      //1500     //& wykonano_1 == 1
+if(odczyt_licznik("pobieram_banderole")>1000  & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 0 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }                                  //2000      //& wykonano_1 == 1
+if(odczyt_licznik("pobieram_banderole")>1400  & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 1 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+                                       //2500      //& wykonano_1 == 1
+if(odczyt_licznik("pobieram_banderole")>1800 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 2 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+                                       //2950      //& wykonano_1 == 1
+if(odczyt_licznik("pobieram_banderole")>2200 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 3 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+
+
+//500 to dla niego minimalny impuls
+
+                                       //3500      //& wykonano_1 == 2
+if(odczyt_licznik("pobieram_banderole")>2600 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 4 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+                                       //4000      //& wykonano_1 == 2
+if(odczyt_licznik("pobieram_banderole")>2800 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 5 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+                                       //4500      //& wykonano_1 == 2
+if(odczyt_licznik("pobieram_banderole")>3200 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 6 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+                                       //4950      //& wykonano_1 == 2
+if(odczyt_licznik("pobieram_banderole")>3600 & pobralem_banderole == 1 & fast == 1 & dawka_kleju == 7 & leje_klej == 1) 
+    {
+    PORTD.3 = 1;  //ZMIANA STANU przestan lac klej
+    leje_klej = 2;
+    }
+
+//if(odczyt_licznik("pobieram_banderole")>6000 & wykonano_1 == 1)    
+//        {     
+//        wykonano_1 = 2;
+//        //PORTA.5 = 0;     //podjedz do gory
+//        //wyk1 = 2;
+//        }
+                                       //2800 30.10.2017          
+if(odczyt_licznik("pobieram_banderole")>4500 & wykonano_1 == 1)    
+        {
+        PORTA.5 = 0;     //podjedz do gory     
+        wyk1 = 2;
+        }
+                                       
+                                       //3300 30.10.2017
+if(odczyt_licznik("pobieram_banderole")>5500 & wyk1 == 2)   
+        {     
+        jedz_kroki(21,5);
+        jedz_kroki(21,4);
+        jedz_kroki(42,3);  //21        10.11.2017
+        jedz_kroki(42,2);  //21        10.11.2017
+        jedz_kroki(1083,1);  //1125    10.11.2017                           
+        wykonano_1 = 3;                             
+        wyk1 = 3;
+        }
+        
+if(opuscilem_banderole == 0 & wykonano_1 == 3) 
+        {
+        opuscilem_banderole = 1;
+        if(fast == 0)
+            {
+            PORTA.2 = 1;  //pistlet przysun           
+            PORTD.3 = 0;  //ZMIANA STANU lej klej                
+            }        
+        jedz_kroki(360,1);        
+        jedz_kroki(100,1);
+        wykonano_1 = 4;     
+        }
+
+if(podnioslem_banderole == 0 & wykonano_1 == 4)
+        {
+        podnioslem_banderole = 1;
+        
+        if(fast == 0)
+          {
+          jedz_kroki(42,2); //21 10.11.2017
+          jedz_kroki(42,3); //21 10.11.2017
+          jedz_kroki(21,4);
+          jedz_kroki(21,5);
+          jedz_kroki(21,6);                            
+          jedz_kroki(77,7); //161 10.11.2017
+          PORTD.3 = 1; //ZMIANA STANU przestan lac klej  04.08.2015
+          jedz_kroki(1050,7);   //50
+          kontrola_obecnosci_banderol();      
+          jedz_kroki(1050,7);  //1100
+          jedz_kroki(21,6);                                        
+          jedz_kroki(21,5);
+          jedz_kroki(21,4);
+          jedz_kroki(42,3);  //21 10.11.2017
+          jedz_kroki(42,2);  //21 10.11.2017
+          }
+        
+        if(fast == 1)
+           {          
+           jedz_kroki(104,1);  //214  
+           //delay_ms(1000);
+           //delay_ms(1000);
+           //delay_ms(1000);
+           kontrola_obecnosci_banderol();
+           jedz_kroki(306,1);  //196  
+           jedz_kroki(200,1);
+           jedz_kroki(200,1);
+           
+           jedz_kroki(661,1);  //1061
+           //PORTA.2 = 0; //cofnij pistolet
+           }         
+        wykonano_1 = 5;
+        }
+
+if(cofniety_pistolet == 0 & wykonano_1 == 5)
+{
+
+
+PORTD.1 = 0;  //ZMIANA STANU wlacz mniejsze ssanie
+cofniety_pistolet = 1;
+if(fast == 0)
+  PORTA.2 = 0; //cofnij pistolet
+jedz_kroki(615,1);
+PORTA.2 = 0; //cofnij pistolet   //proba
+jedz_kroki(1995,1);
+
+jedz_kroki(56,1);   //63,1 16.11.2017    
+jedz_kroki(28,1);  //70 10.11.2017
+
+jedz_kroki(42,2);  //21 10.11.2017
+jedz_kroki(42,3);  //21 10.11.2017
+jedz_kroki(21,4);
+jedz_kroki(21,5);
+wykonano_1 = 6;
+//while(1)
+               // {
+               // }
+}
+
+ 
+if(nakleilem == 0 & wykonano_1 == 6)
+        {
+        nakleilem = naklejam();
+        wykonano_1 = 7;
+        //while(1)
+        // {
+        // }
+        }
+                             //10 PNE
+if(odczyt_licznik("naklejam")>4000 & wykonano_2 == 0 & wykonano_1 == 7 & fast == 1)
+        {
+        //while(1)
+        //        {
+        //        }
+        PORTD.2 = 0;  //w³¹czenie falownika
+        PORTA.5 = 0;     //podjedz do gory
+        //while(1)
+        //        {
+        //        }
+        if(odczyt_licznik("naklejam")>50)   //20
+               wykonano_2 = 1;       
+        }
+                             //15 PNE
+if(odczyt_licznik("naklejam")>6000 & wykonano_2 == 0 & wykonano_1 == 7 & fast == 0)
+        {
+        PORTD.2 = 0;  //w³¹czenie falownika
+        PORTA.5 = 0;     //podjedz do gory
+        
+        if(odczyt_licznik("naklejam")>8000)
+               {
+               //while(1)
+               // {
+               // }
+
+               wykonano_2 = 1;       //20
+               wyk1 = 0;
+               }
+        }
+  
+}
+
+void praca_lewo()
+{
+pracuje_w_kierunku = 2;
+PORTE.5 = 0;  //DIR   
+//zatrzymalem_kubek = 0;
+//kubek = 0;
+jedz_kroki(21,5);// 
+jedz_kroki(21,4);// 
+jedz_kroki(42,3);// 21 10.11.2017
+jedz_kroki(42,2);  // 21 10.11.2017
+jedz_kroki(645,1);  //687 10.11.2017    //645 10.11.2017  
+jedz_kroki(50,1);
+PORTD.2 = 0;  //w³¹czenie falownika
+PORTA.3 = 1;    //opusc stemel doklejajacy  ------------------------------------------------------
+jedz_kroki(2073,1);  //2123 9.01.2016
+jedz_kroki(212,1);   //212  9.01.2016       
+zatrzymalem_kubek = 0;
+kubek = 4;
+PORTA.3 = 0;    //podnies stemel doklejajacy
+jedz_kroki(1246,1); //846    9.01.2016  
+PORTA.1 = 0;  //koniec szpikulca
+PORTA.7 = 0;  //koniec zatrzymania
+zezzwalaj_na_oklejenie_boczne = 1;
+jedz_kroki(598,1);  //1098 9.01.2016
+jedz_kroki(800,1);  
+jedz_kroki(56,1);      //63,1   16.11.2016
+//if(duze_kubki == 1 | srednie_kubki == 1)
+jedz_kroki(28,1);  //70 10.11.2017  
+
+jedz_kroki(42,2);   //21  10.11.2017
+jedz_kroki(42,3);   //21  10.11.2017
+jedz_kroki(21,4);
+jedz_kroki(21,5);
+leje_klej = 0;
+}
+  
+void zeruj_flagi()
+{
+pobralem_banderole = 0;
+wykonano_1 = 0;
+wykonano_2 = 0;
+opuscilem_banderole = 0;
+podnioslem_banderole = 0;
+nakleilem = 0;
+sprawdzilem_banderole = 0;
+podajnik_gotowy = 0;
+cofniety_pistolet = 0;
+lej_klej = 0;
+}
+
+void main(void)
+{
+// Declare your local variables here
+
+// Crystal Oscillator division factor: 2
+//XDIV=0xFF;
+
+// Input/Output Ports initialization
+// Port A initialization
+// Func7=Out Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out 
+// State7=0 State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0 
+PORTA=0x00;
+DDRA=0xFF;
+
+// Port B initialization
+// Func7=In Func6=In Func5=In Func4=In Func3=In Func2=In Func1=In Func0=In 
+// State7=T State6=T State5=T State4=T State3=T State2=T State1=T State0=T 
+PORTB=0x00;
+DDRB=0x00;
+
+// Port C initialization
+// Func7=In Func6=In Func5=In Func4=In Func3=In Func2=In Func1=In Func0=In 
+// State7=T State6=T State5=T State4=T State3=T State2=T State1=T State0=T 
+PORTC=0x00;
+DDRC=0x00;
+
+// Port D initialization
+// Func7=Out Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out 
+// State7=0 State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0 
+PORTD=0x00;
+DDRD=0xFF;
+
+// Port E initialization
+// Func7=Out Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out 
+// State7=0 State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0 
+PORTE=0x00;
+DDRE=0xFF;
+
+// Port F initialization
+// Func7=Out Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out 
+// State7=0 State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0 
+PORTF=0x00;
+DDRF=0xFF;
+
+// Port G initialization
+// Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out 
+// State4=0 State3=0 State2=0 State1=0 State0=0 
+PORTG=0x00;
+DDRG=0x1F;
+
+// Timer/Counter 0 initialization
+// Clock source: System Clock
+// Clock value: 2000,000 kHz
+// Mode: Normal top=0xFF
+// OC0 output: Disconnected
+ASSR=0x00;
+TCCR0=0x02;//2
+TCNT0=0x00;
+OCR0=0x00;
+
+// Timer/Counter 1 initialization
+// Clock source: System Clock
+// Clock value: Timer1 Stopped
+// Mode: Normal top=0xFFFF
+// OC1A output: Discon.
+// OC1B output: Discon.
+// OC1C output: Discon.
+// Noise Canceler: Off
+// Input Capture on Falling Edge
+// Timer1 Overflow Interrupt: Off
+// Input Capture Interrupt: Off
+// Compare A Match Interrupt: Off
+// Compare B Match Interrupt: Off
+// Compare C Match Interrupt: Off
+TCCR1A=0x00;
+TCCR1B=0x00;
+TCNT1H=0x00;
+TCNT1L=0x00;
+ICR1H=0x00;
+ICR1L=0x00;
+OCR1AH=0x00;
+OCR1AL=0x00;
+OCR1BH=0x00;
+OCR1BL=0x00;
+OCR1CH=0x00;
+OCR1CL=0x00;
+
+// Timer/Counter 2 initialization
+// Clock source: System Clock
+// Clock value: 2000,000 kHz
+// Mode: Normal top=0xFF
+// OC2 output: Disconnected
+TCCR2=0x02;
+TCNT2=0x00;
+OCR2=0x00;
+
+
+// Timer/Counter 2 initialization
+// Clock source: System Clock
+// Clock value: Timer2 Stopped
+// Mode: Normal top=0xFF
+// OC2 output: Disconnected
+//TCCR2=0x00;
+//TCNT2=0x00;
+//OCR2=0x00;
+
+// Timer/Counter 3 initialization
+// Clock source: System Clock
+// Clock value: Timer3 Stopped
+// Mode: Normal top=0xFFFF
+// OC3A output: Discon.
+// OC3B output: Discon.
+// OC3C output: Discon.
+// Noise Canceler: Off
+// Input Capture on Falling Edge
+// Timer3 Overflow Interrupt: Off
+// Input Capture Interrupt: Off
+// Compare A Match Interrupt: Off
+// Compare B Match Interrupt: Off
+// Compare C Match Interrupt: Off
+TCCR3A=0x00;
+TCCR3B=0x00;
+TCNT3H=0x00;
+TCNT3L=0x00;
+ICR3H=0x00;
+ICR3L=0x00;
+OCR3AH=0x00;
+OCR3AL=0x00;
+OCR3BH=0x00;
+OCR3BL=0x00;
+OCR3CH=0x00;
+OCR3CL=0x00;
+
+// External Interrupt(s) initialization
+// INT0: Off
+// INT1: Off
+// INT2: Off
+// INT3: Off
+// INT4: Off
+// INT5: Off
+// INT6: Off
+// INT7: Off
+EICRA=0x00;
+EICRB=0x00;
+EIMSK=0x00;
+
+// Timer(s)/Counter(s) Interrupt(s) initialization
+TIMSK=0x41;
+
+ETIMSK=0x00;
+
+// USART0 initialization
+// USART0 disabled
+UCSR0B=0x00;
+
+// USART1 initialization
+// USART1 disabled
+UCSR1B=0x00;
+
+// Analog Comparator initialization
+// Analog Comparator: Off
+// Analog Comparator Input Capture by Timer/Counter 1: Off
+ACSR=0x80;
+SFIOR=0x00;
+
+// ADC initialization
+// ADC disabled
+ADCSRA=0x00;
+
+// SPI initialization
+// SPI disabled
+SPCR=0x00;
+
+// TWI initialization
+// TWI disabled
+TWCR=0x00;
+
+// Alphanumeric LCD initialization
+// Connections specified in the
+// Project|Configure|C Compiler|Libraries|Alphanumeric LCD menu:
+// RS - PORTG Bit 4
+// RD - PORTD Bit 6
+// EN - PORTD Bit 7
+// D4 - PORTG Bit 0
+// D5 - PORTG Bit 1
+// D6 - PORTG Bit 2
+// D7 - PORTG Bit 3
+// Characters/line: 8
+lcd_init(16);
+
+//STARE
+// PORTA.1 = 1 DIR poziomy
+// PORTA.2 = 1 STEP poziomy
+ 
+// PORTC.1 = 1 DIR pion
+// PORTC.2 = 1 STEP pion
+
+//NOWE
+//PINE.5 = 1 //DIR POZIOMY
+//PINE.4 = 1 //STEP POZIOMY
+
+//PINE.3  //DIR PIONOWY
+//PINE.2  //STEP pionowy
+
+PORTA.0 = 0;  //separowanie kubkow
+PORTA.1 = 0;  //szpikulec
+PORTA.2 = 0;  //silownik poruszaj¹cy pistoletem
+PORTA.3 = 0;  //stemel doklejajacy
+PORTA.4 = 0;  //przyssawka banderoli
+PORTA.5 = 0;  //silownik banderoli
+PORTA.6 = 0;  //silownik obrotowy -wywalam
+PORTA.7 = 0;   //zatrzymywanie kubka
+
+PORTD.1 = 1;   //podcisnienie zmiana z duzego na male, czyli teraz po daniu 1 jest duze
+PORTD.2 = 1;   //falownik wylacz
+PORTD.3 = 1;   //nie lej kleju - to jest lanie kleju
+
+//PINB.0  //RUN
+//PINB.1  //ST-UP
+//PINB.2 //ST-load
+//PINB.3 //kubek chaos
+//PINB.4 //guzik slow fast
+//PINB.5 //guzik big-small
+//PINB.6 //laser obecnosci kubka
+//PINB.7 //czujnik banderol czy jest w zasobniku
+
+//PINC.0 //laser obecnosci banderoli
+//PINC.1 //czujnik kubek na koncu tasmy - juz wolne
+//PINC.2 //krancowka lewa pozioma
+//PINC.3 //guzik banderole w dol
+//PINC.4 //krancowka odpowiadajaca za brak kleju
+//PINC.5 //czujnik ciœnienia
+//PINC.6  //wolne
+//PINC.7  //wolne
+
+//Enable obu sterownikow daæ do masy
+ 
+silnik_gorny_zebatka_promien = 30;   //mm
+mikro_krokow_na_obrot = 4000;
+wyzerowalem_krancowke = 0;
+zezwalaj_na_kolejny_kubek = 0;
+sytuacja_startowa = 1;
+dostep_do_podajnika = 0;
+zezzwalaj_na_oklejenie_boczne = 0;
+wyzerowalem_nad_podajnikiem = 0;
+wyswietl_obecnosc_kleju = 1;
+wyswietl_brak_kleju = 1;
+pracuje = 0;
+czas_wylaczenia_falownika = 0;
+czas_czyszczenia_tasmy = 0;
+poczatek_serii = 1;
+kolejkowanie_start_stop_poczatek = 1;
+zeruj_flagi();
+
+PORTA.0 = 1;     //silownik blokujacy
+PORTE.4 = 1;  //STAN WYSOKI NA STEP poziom 
+PORTE.2 = 1;  //STAN WYSOKI NA STEP pion
+ulamki_sekund_0 = 0;
+ulamki_sekund_2 = 0;
+fast = 0;
+guzik_male_kubki = 0;
+pracuje_w_kierunku = 0;
+dawka_kleju = 3;
+dobieram_dawke = 0;
+licznik_wyswietlania_kleju_stala = 100;
+leje_klej = 0;
+dawka_kleju_wyswietlona = dawka_kleju;
+
+
+/*
+PORTD.2 = 0;  //ZMIANA STANU
+while(czas_czyszczenia_tasmy < 1000000)
+       czas_czyszczenia_tasmy++;
+//while(czas_czyszczenia_tasmy < 1500000)
+//       czas_czyszczenia_tasmy++;
+
+PORTD.2 = 1;  //tasma ZMIANA STANU
+*/
+
+delay_ms(1000);
+delay_ms(1000);
+wybor_trybu_pracy_bez_fast();
+
+#asm("sei")
+
+
+//while(1)
+//{
+//kontrola_obecnosci_banderol();
+//}
+
+
+
+
+
+
+
+
+
+while(wyzerowalem_nad_podajnikiem == 0)
+{
+if(wyzerowalem_krancowke == 0)
+   jedz_do_krancowki_poziom();
+} 
+
+sprawdz_cisnienie();
+
+
+//ustawienia na liczniku:
+//male kubki - 9970
+//hasso - 0000
+//haos - 0420 + przegroda wydluzona 
+
+//wydajnosc
+//ultimate - 18 na min 
+//hasso - 18 min
+//chaos - 16 min
+
+
+//po poprawkach
+//ultimate - 23 na min 
+//hasso - 22 min
+//chaos -  21 min
+
+//PORTA.4 = 1;
+//while(1)
+{
+}
+
+
+while (1)
+      { 
+      
+      sprawdz_cisnienie();
+      
+      sekwencja_wylaczenia_falownika();
+      
+      if(ulamki_sekund_2 > 3)
+         ulamki_sekund_2 = 0;        
+            
+      obsluga_podajnika_banderol();               
+      obsluga_kleju();
+      obsluga_dawki_kleju();
+      
+                                                                          //run - stoi
+      if(licznik_wyswietlania_kleju == licznik_wyswietlania_kleju_stala & PINB.0 == 1 & pracuje == 0) 
+        {
+         licznik_wyswietlen_jak_stoi++;
+         if(jest_klej == 1 & licznik_wyswietlen_jak_stoi == 5000)
+                    {
+                    lcd_clear();
+                    lcd_gotoxy(0,0);
+                    lcd_puts("NUMER");
+                    lcd_gotoxy(7,0);
+                    itoa(licznik_cykli,dupa);
+                    lcd_puts(dupa);
+                    lcd_gotoxy(0,1);
+                    lcd_puts("DAWKA KLEJU");
+                    lcd_gotoxy(13,1);
+                    itoa(dawka_kleju,dupa);
+                    dawka_kleju_wyswietlona = dawka_kleju;
+                    lcd_puts(dupa);
+                    licznik_wyswietlen_jak_stoi = 0;
+                    }
+        }
+       
+
+                                   //run                                                                //ZMIANA STANU
+   if(wyzerowalem_krancowke == 1 & PINB.0 == 0 & dostep_do_podajnika == 0 & podajnik_gotowy == 1 & zatrzymalem_kubek == 1 & jest_klej == 1 | pracuje == 1)
+            {  
+            praca_prawo();
+            pracuje = 1;
+            if(wykonano_2 == 1)
+                   {
+                   praca_lewo();
+                   zeruj_flagi();
+                   licznik_cykli++;
+                   if(jest_klej == 1)
+                    {
+                    lcd_clear();
+                    lcd_gotoxy(0,0);
+                    lcd_puts("NUMER");
+                    lcd_gotoxy(7,0);
+                    itoa(licznik_cykli,dupa);
+                    lcd_puts(dupa);
+                    lcd_gotoxy(0,1);
+                    lcd_puts("DAWKA KLEJU");
+                    lcd_gotoxy(13,1);
+                    itoa(dawka_kleju,dupa);
+                    lcd_puts(dupa);
+                    dawka_kleju_wyswietlona = dawka_kleju;
+                    }
+                   if(PINB.7 == 1)  //to stary B.2   
+                      podajnik_gotowy = 1;
+                   pracuje = 0;
+                   }
+            }
+     
+       }
+
+
+}
+
+

@@ -1,0 +1,73 @@
+RAM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+ulamki_sekund_0                                                   0x083D       4
+ulamki_sekund_1                                                   0x0841       4
+ulamki_sekund_2                                                   0x0845       4
+milisekundy_przechodzi_kubek                                      0x0849       4
+milisekundy_czas_kroku                                            0x084D       4
+milisekundy_pobieram_banderole                                    0x0851       4
+milisekundy_przejazd_nad_klejem                                   0x0855       4
+milisekundy_naklejam                                              0x0859       4
+milisekundy_oklejanie_boczne                                      0x085D       4
+czas_wylaczenia_falownika                                         0x0861       4
+czas_czyszczenia_tasmy                                            0x0865       4
+licznik_wlacznika_run                                             0x0869       4
+licznik_wyswietlania_kleju                                        0x086D       4
+licznik_wyswietlania_kleju_stala                                  0x0871       4
+licznik_wyswietlen_jak_stoi                                       0x0875       4
+silnik_gorny_zebatka_promien                                      0x0879       4
+czas                                                              0x087D       4
+oklejam_bok                                                       0x0881       2
+wyzerowalem_nad_podajnikiem                                       0x0883       2
+jest_klej                                                         0x0885       2
+pracuje                                                           0x0887       2
+wyswietl_obecnosc_kleju                                           0x0889       2
+wyswietl_brak_kleju                                               0x088B       2
+zezwolenie_run                                                    0x088D       2
+dawka_kleju                                                       0x088F       2
+srednie_kubki                                                     0x0891       2
+pobralem_banderole                                                0x0893       2
+opuscilem_banderole                                               0x0895       2
+podnioslem_banderole                                              0x0897       2
+lej_klej                                                          0x0899       2
+cofniety_pistolet                                                 0x089B       2
+nakleilem                                                         0x089D       2
+wyzerowalem_krancowke                                             0x089F       2
+wykonano_1                                                        0x08A1       2
+wykonano_2                                                        0x08A3       2
+sprawdzilem_banderole                                             0x08A5       2
+podajnik_gotowy                                                   0x08A7       2
+widzi_kubek                                                       0x08A9       2
+zatrzymalem_kubek                                                 0x08AB       2
+licznik_pionowego_czujnika                                        0x08AD       2
+licznik_cykli                                                     0x08AF       2
+sytuacja_startowa                                                 0x08B1       2
+fast                                                              0x08B3       2
+guzik_male_kubki                                                  0x08B5       2
+kubek                                                             0x08B7       2
+dupa                                                              0x08B9       2
+poczatek_serii                                                    0x08BB       2
+kolejkowanie_start_stop_poczatek                                  0x08BD       2
+dobieram_dawke                                                    0x08BF       2
+leje_klej                                                         0x08C1       2
+dawka_kleju_wyswietlona                                           0x08C3       2
+wyk1                                                              0x08C5       2
+_seed                                                             0x08C7       4
+_base_y                                                           0x08CB       4
+_lcd_x                                                            0x08CF       1
+_lcd_y                                                            0x08D0       1
+_lcd_maxx                                                         0x08D1       1
+
+EEPROM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                          Register  Size
+--------------------------------------------------------------------------------
+pracuje_w_kierunku                                                R4,R5        2
+mikro_krokow_na_obrot                                             R6,R7        2
+zezwalaj_na_kolejny_kubek                                         R8,R9        2
+dostep_do_podajnika                                               R10,R11      2
+zezzwalaj_na_oklejenie_boczne                                     R12,R13      2
